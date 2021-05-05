@@ -20,7 +20,7 @@ load_dotenv(verbose=True, dotenv_path='upload.env.local')
 
 
 # read envs from file
-EMAIL = os.getenv('EMAIL', None) # the e-mail you used to sign up
+EMAIL = os.getenv('EMAIL', None)  # the e-mail you used to sign up
 assert EMAIL is not None
 
 
@@ -42,12 +42,12 @@ def train_product_2_vec_model(sessions: list,
     :param ns_exponent: ns_exponent parameter for gensim word2vec
     :return: trained product embedding model
     """
-    model =  gensim.models.Word2Vec(sentences=sessions,
-                                    min_count=min_c,
-                                    vector_size=size,
-                                    window=window,
-                                    epochs=iterations,
-                                    ns_exponent=ns_exponent)
+    model = gensim.models.Word2Vec(sentences=sessions,
+                                   min_count=min_c,
+                                   vector_size=size,
+                                   window=window,
+                                   epochs=iterations,
+                                   ns_exponent=ns_exponent)
 
     print("# products in the space: {}".format(len(model.wv.index_to_key)))
 
@@ -103,22 +103,25 @@ def make_predictions(prod2vec_model, test_file: str):
         next_sku = choice(all_skus)
         # copy the test case
         _pred = dict(t)
-        _products_in_session = [_["product_sku_hash"] for _ in t['query'] if _["product_sku_hash"]]
+        _products_in_session = [_["product_sku_hash"]
+                                for _ in t['query'] if _["product_sku_hash"]]
         # get last product in the query session and check it is in the model space
         if _products_in_session and _products_in_session[-1] in all_skus:
-                # get first product from knn
-                next_sku = prod2vec_model.similar_by_word(_products_in_session[-1], topn=1)[0][0]
-                cnt_preds += 1
+            # get first product from knn
+            next_sku = prod2vec_model.similar_by_word(
+                _products_in_session[-1], topn=1)[0][0]
+            cnt_preds += 1
 
         # append the label - which needs to be a list
-        _pred["label"] = [ next_sku ]
+        _pred["label"] = [next_sku]
         # append prediction to the final list
         my_predictions.append(_pred)
 
     # check for consistency
     assert len(my_predictions) == len(test_queries)
     # print out some "coverage"
-    print("Predictions made in {} out of {} total test cases".format(cnt_preds, len(test_queries)))
+    print("Predictions made in {} out of {} total test cases".format(
+        cnt_preds, len(test_queries)))
 
     return my_predictions
 
@@ -135,7 +138,8 @@ def train_knn(upload=False):
     # use model to predict
     preds = make_predictions(prod2vec_model, test_file='rec_test_phase_1.json')
     # name the prediction file according to the README specs
-    local_prediction_file = '{}_{}.json'.format(EMAIL.replace('@', '_'), round(time.time() * 1000))
+    local_prediction_file = '{}_{}.json'.format(
+        EMAIL.replace('@', '_'), round(time.time() * 1000))
     # dump to file
     with open(local_prediction_file, 'w') as outfile:
         json.dump(preds, outfile, indent=2)

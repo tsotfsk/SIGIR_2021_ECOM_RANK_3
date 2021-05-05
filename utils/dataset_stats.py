@@ -38,7 +38,7 @@ def get_rows(file_path: str, print_limit: int = 2):
 
 
 def get_descriptive_stats(
-        browsing_train_path : str,
+        browsing_train_path: str,
         search_train_path: str,
         sku_2_content_path: str
 ):
@@ -65,9 +65,12 @@ def get_descriptive_stats(
     print("\n\n=============== COUNTS ===============")
     print("# {} of distinct SKUs with interactions".format(
         len(set([r['product_sku_hash'] for r in browsing_events if r['product_sku_hash']]))))
-    print("# {} of add-to-cart events".format(sum(1 for r in browsing_events if r['product_action'] == 'add')))
-    print("# {} of purchase events".format(sum(1 for r in browsing_events if r['product_action'] == 'purchase')))
-    print("# {} of total interactions".format(sum(1 for r in browsing_events if r['product_action'])))
+    print("# {} of add-to-cart events".format(
+        sum(1 for r in browsing_events if r['product_action'] == 'add')))
+    print("# {} of purchase events".format(
+        sum(1 for r in browsing_events if r['product_action'] == 'purchase')))
+    print("# {} of total interactions".format(
+        sum(1 for r in browsing_events if r['product_action'])))
     print("# {} of distinct sessions".format(
         len(set([r['session_id_hash'] for r in browsing_events if r['session_id_hash']]))))
     # now run some tests

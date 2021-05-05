@@ -48,7 +48,8 @@ train_data_df = pd.read_csv(TRAIN_PATH)
 session_ids = set(train_data_df['session_id_hash'].unique())
 train_cutoff = int(len(session_ids) * TRAIN_RATIO)
 train_session_ids = list(session_ids)[:train_cutoff]
-train_data_df = train_data_df[train_data_df['session_id_hash'].isin(train_session_ids)]
+train_data_df = train_data_df[train_data_df['session_id_hash'].isin(
+    train_session_ids)]
 
 # Filter out:
 # * `remove from cart` events to avoid feeding them to session_rec as positive signals
@@ -56,18 +57,22 @@ train_data_df = train_data_df[train_data_df['session_id_hash'].isin(train_sessio
 # * sessions with only one action
 train_data_df = train_data_df[train_data_df['product_action'] != 'remove']
 train_data_df = train_data_df.dropna(subset=['product_sku_hash'])
-train_data_df['session_len_count'] = train_data_df.groupby('session_id_hash')['session_id_hash'].transform('count')
+train_data_df['session_len_count'] = train_data_df.groupby(
+    'session_id_hash')['session_id_hash'].transform('count')
 train_data_df = train_data_df[train_data_df['session_len_count'] >= 2]
 
 # sort by session, then timestamp
-train_data_df = train_data_df.sort_values(['session_id_hash', 'server_timestamp_epoch_ms'], ascending=True)
+train_data_df = train_data_df.sort_values(
+    ['session_id_hash', 'server_timestamp_epoch_ms'], ascending=True)
 
 # Encode labels with integers
-item_id_int_series, item_label_to_index, item_index_to_label = label_encode_series(train_data_df.product_sku_hash)
+item_id_int_series, item_label_to_index, item_index_to_label = label_encode_series(
+    train_data_df.product_sku_hash)
 item_string_set = set(item_label_to_index.keys())
 
 # Add tokenized session ID, tokenized item ID, and seconds since epoch time.
-train_data_df[SessionId] = train_data_df.groupby([train_data_df.session_id_hash]).grouper.group_info[0]
+train_data_df[SessionId] = train_data_df.groupby(
+    [train_data_df.session_id_hash]).grouper.group_info[0]
 train_data_df[Time] = train_data_df.server_timestamp_epoch_ms / 1000
 train_data_df[ItemId] = item_id_int_series
 
@@ -121,5 +126,3 @@ test_output_df = pd.DataFrame(test_output)
 test_output_df[ItemId] = test_output_df.ItemId.map(item_label_to_index)
 test_output_df.to_csv(PREPARED_TEST_PATH, sep='\t', index=False)
 print("Done generating 'prepared' for testing")
-
-

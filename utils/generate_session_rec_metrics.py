@@ -3,12 +3,12 @@ The script takes the recommendation test data with appended predictions, and com
 Note: some paths pointing to raw training data is needed to be specified, as we need some training data statistic for
 some of the metrics, e.g. popularity
 """
+from test_data_evaluation_metrics import compute_rec_metrics, construct_item_to_pop_map, construct_all_items
+import json
+import os
 import sys
 
 sys.path.append("..")
-import os
-import json
-from test_data_evaluation_metrics import compute_rec_metrics, construct_item_to_pop_map, construct_all_items
 
 if __name__ == "__main__":
     # training file input path
@@ -54,8 +54,10 @@ if __name__ == "__main__":
     k = 20
     METRIC_TO_SCORE = compute_rec_metrics(preds=preds,
                                           labels=labels,
-                                          item_to_pop_path=os.path.join(EVALUATION_OUTPUT_FOLDER_PATH, SKU_TO_POP_NAME),
-                                          all_skus_path=os.path.join(EVALUATION_OUTPUT_FOLDER_PATH, ALL_SKUS_NAME),
+                                          item_to_pop_path=os.path.join(
+                                              EVALUATION_OUTPUT_FOLDER_PATH, SKU_TO_POP_NAME),
+                                          all_skus_path=os.path.join(
+                                              EVALUATION_OUTPUT_FOLDER_PATH, ALL_SKUS_NAME),
                                           topK=k)
     print(METRIC_TO_SCORE)
     with open(os.path.join(EVALUATION_OUTPUT_FOLDER_PATH, METRICS_NAME), 'w') as outfile:

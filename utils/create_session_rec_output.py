@@ -10,9 +10,12 @@ from pathlib import Path
 import pickle
 
 TEST_PATH = Path('./session_rec_sigir_data/test/rec_test.json')
-TEST_WITH_PREDICTION_PATH = Path('./session_rec_sigir_data/test/rec_test_with_pred.json')
-RECOMMENDATION_PATH = Path('./session_rec_sigir_data/prepared/test_single_models_sigir.stamp-init_lr=0.003-n_epochs=10-decay_rate=0.4.csv.Saver@20--.csv')
-ITEM_LABEL_ENCODING_MAP_PATH = Path('./session_rec_sigir_data/prepared/item_label_encoding.p')
+TEST_WITH_PREDICTION_PATH = Path(
+    './session_rec_sigir_data/test/rec_test_with_pred.json')
+RECOMMENDATION_PATH = Path(
+    './session_rec_sigir_data/prepared/test_single_models_sigir.stamp-init_lr=0.003-n_epochs=10-decay_rate=0.4.csv.Saver@20--.csv')
+ITEM_LABEL_ENCODING_MAP_PATH = Path(
+    './session_rec_sigir_data/prepared/item_label_encoding.p')
 
 item_label_encoding = pickle.load(ITEM_LABEL_ENCODING_MAP_PATH.open(mode='rb'))
 

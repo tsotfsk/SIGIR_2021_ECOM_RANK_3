@@ -63,7 +63,8 @@ def f1_at_k(preds: list, labels: list, topK: int):
         nb_hits = len(set(p).intersection(set(l)))
         precision = nb_hits / topK
         recall = nb_hits / len(set(l)) if len(l) > 0 else 0.0
-        f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+        f1 = (2 * precision * recall) / (precision +
+                                         recall) if (precision + recall) > 0 else 0.0
         all_precision.append(precision)
         all_recall.append(recall)
         all_f1.append(f1)
@@ -77,7 +78,7 @@ def weighted_micro_f1(preds, labels, nb_after_add, weights: dict):
     assert len(labels) > 0
     assert len(preds) == len(labels)
     assert len(labels) == len(nb_after_add)
-    assert all( _ in [0,2,4,6,8,10] for _ in nb_after_add)
+    assert all(_ in [0, 2, 4, 6, 8, 10] for _ in nb_after_add)
 
     nb_added_2_preds_and_labels = defaultdict(list)
     for p, l, n in zip(preds, labels, nb_after_add):
@@ -87,16 +88,16 @@ def weighted_micro_f1(preds, labels, nb_after_add, weights: dict):
     for n, p_and_l in nb_added_2_preds_and_labels.items():
         p = [_['pred'] for _ in p_and_l]
         l = [_['label'] for _ in p_and_l]
-        assert(len(p)==len(l))
-        num_correct = sum([ 1 for y, y_hat in zip(l,p) if y==y_hat])
-        micro_f1 = num_correct/len(p_and_l)
+        assert(len(p) == len(l))
+        num_correct = sum([1 for y, y_hat in zip(l, p) if y == y_hat])
+        micro_f1 = num_correct / len(p_and_l)
         metric_to_score[n] = micro_f1
-    weighted_sum = sum([ f1*weights[n] for n,f1 in metric_to_score.items()])
+    weighted_sum = sum([f1 * weights[n] for n, f1 in metric_to_score.items()])
 
     return weighted_sum
 
 
-def next_item_metric(preds:list, labels:list, top_K: int =20):
+def next_item_metric(preds: list, labels: list, top_K: int = 20):
     """
     Compute metric for next item recommendation task.
 
@@ -108,7 +109,7 @@ def next_item_metric(preds:list, labels:list, top_K: int =20):
     return mrr_at_k(preds, labels, top_K)
 
 
-def subsequent_items_metric(preds:list, labels:list, top_K: int =20):
+def subsequent_items_metric(preds: list, labels: list, top_K: int = 20):
     """
     Compute metric for the all items recommendation task.
 
@@ -120,7 +121,7 @@ def subsequent_items_metric(preds:list, labels:list, top_K: int =20):
     return f1_at_k(preds, labels, top_K)
 
 
-def cart_abandonment_metric(preds:list, labels:list, nb_after_add: list):
+def cart_abandonment_metric(preds: list, labels: list, nb_after_add: list):
     """
     Compute metric for the cart abandonment task.
 
@@ -160,12 +161,11 @@ def evaluate_recs(path_to_predictions: str, path_to_ground_truth: str):
     predictions = [_['label'] for _ in prediction_data]
     ground_truth = [_['label'] for _ in ground_truth_data]
 
-
-    next_item_mrr  = next_item_metric(predictions, ground_truth)
+    next_item_mrr = next_item_metric(predictions, ground_truth)
     subsequent_items_f1 = subsequent_items_metric(predictions, ground_truth)
 
     return {'mrr_next_item': next_item_mrr,
-            'f1_all_items' : subsequent_items_f1}
+            'f1_all_items': subsequent_items_f1}
 
 
 def evaluate_cart(path_to_predictions: str, path_to_ground_truth: str):
@@ -196,7 +196,8 @@ def evaluate_cart(path_to_predictions: str, path_to_ground_truth: str):
 
     # required for computing weighted f1
     nb_after_add = [_['nb_after_add'] for _ in ground_truth_data]
-    weighted_f1 = cart_abandonment_metric(predictions, ground_truth, nb_after_add)
+    weighted_f1 = cart_abandonment_metric(
+        predictions, ground_truth, nb_after_add)
 
     return {'weighted_micro_f1': weighted_f1}
 
@@ -209,8 +210,8 @@ def example_in_session_recommedation():
     np.random.seed(0)
 
     # Generate some fake predictions and labels
-    N = 1000 # number of fake data points
-    num_rec = 50 # max number of recommendations per data point
+    N = 1000  # number of fake data points
+    num_rec = 50  # max number of recommendations per data point
     # assume we have 1K 'SKUS' where each SKU is an integer
     dummy_skus = np.arange(0, 1000)
 
@@ -245,15 +246,15 @@ def example_cart_abandonment():
     np.random.seed(0)
 
     # Generate some fake predictions and labels
-    N = 1000 # number of fake data points
-    num_after_add = np.arange(0,12,2).tolist()
+    N = 1000  # number of fake data points
+    num_after_add = np.arange(0, 12, 2).tolist()
 
     # generate dummy ground_truth for CART task by randomly sampling label and num_after_add
-    cart_gt_dummy = [{'label': randint(0,1),
-                      'nb_after_add' : num_after_add[randint(0,5)] } for i in range(N)]
+    cart_gt_dummy = [{'label': randint(0, 1),
+                      'nb_after_add': num_after_add[randint(0, 5)]} for i in range(N)]
 
     # generate dummy predictions for CART task by random sampling label
-    cart_preds_dummy = [{'label': randint(0,1)} for _ in cart_gt_dummy]
+    cart_preds_dummy = [{'label': randint(0, 1)} for _ in cart_gt_dummy]
 
     # save dummy data
     PATH_TO_GT_CART = './dummy_gt_cart.json'
@@ -275,7 +276,3 @@ if __name__ == '__main__':
     # evaluation for the two tasks in the Challenge
     example_in_session_recommedation()
     example_cart_abandonment()
-
-
-
-
