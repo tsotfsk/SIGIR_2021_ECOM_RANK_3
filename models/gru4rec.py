@@ -3,6 +3,8 @@ import torch.nn as nn
 from torch.nn.init import xavier_uniform_, xavier_normal_
 from models.layers import DynamicGRU, BPRLoss
 import torch.nn.functional as F
+import pickle
+import numpy as np
 
 
 class GRU4Rec(nn.Module):
@@ -11,8 +13,8 @@ class GRU4Rec(nn.Module):
 
         # load parameters info
         self.config = config
-        self.embedding_size = config.embedding_size
-        self.hidden_size = config.hidden_size
+        self.embedding_size = 100
+        self.hidden_size = 100
         self.num_layers = config.num_layers
         # self.dropout_prob = config.dropout_prob
         self.n_items = n_items
@@ -20,6 +22,21 @@ class GRU4Rec(nn.Module):
         # define layers and loss
         self.item_embedding = nn.Embedding(
             self.n_items + 1, self.embedding_size, padding_idx=0)
+
+        with open('./dataset/prepared/text.pkl', 'rb') as f:
+            text = pickle.load(f)
+        with open('./dataset/prepared/imag.pkl', 'rb') as f:
+            imag = pickle.load(f)
+
+        text = torch.from_numpy(text)
+        text = F.normalize(text, dim=1)
+
+        imag = torch.from_numpy(imag)
+        imag = F.normalize(imag, dim=1)
+
+        pretrain = torch.cat((text, imag), dim=1)
+        with torch.no_grad():
+            self.item_embedding.weight[1:].copy_(pretrain)
         # self.emb_dropout = nn.Dropout(self.dropout_prob)
         self.gru_layers = DynamicGRU(
             input_size=self.embedding_size,
@@ -39,8 +56,8 @@ class GRU4Rec(nn.Module):
         self.apply(self._init_weights)
 
     def _init_weights(self, module):
-        if isinstance(module, nn.Embedding):
-            xavier_normal_(module.weight)
+        # if isinstance(module, nn.Embedding):
+        #     xavier_normal_(module.weight)
         if isinstance(module, nn.GRU):
             xavier_uniform_(module.weight_hh_l0)
             xavier_uniform_(module.weight_ih_l0)
@@ -79,7 +96,7 @@ class GRU4Rec(nn.Module):
         item_seq = feed_dict['seqs']
         item_seq_len = feed_dict['seq_lens']
         seq_output = self.forward(item_seq, item_seq_len)
-        test_items_emb = self.item_embedding.weight[1:]
+        test_items_emb = self.item_embedding.weight
         scores = torch.matmul(
             seq_output, test_items_emb.transpose(0, 1))  # [B, n_items]
         return scores
