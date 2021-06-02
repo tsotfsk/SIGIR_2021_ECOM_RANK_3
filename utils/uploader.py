@@ -16,7 +16,7 @@ import boto3
 from datetime import datetime
 from dotenv import load_dotenv
 # load envs from env file
-load_dotenv(verbose=True, dotenv_path='upload.env.local')
+load_dotenv(verbose=True, dotenv_path='./utils/upload.env.local')
 
 # env info should be in your env file
 BUCKET_NAME = os.getenv('BUCKET_NAME')  # you received it in your e-mail
@@ -46,7 +46,7 @@ def upload_submission(
         aws_secret_access_key=AWS_SECRET_KEY,
         region_name='us-west-2'
     )
-    s3_file_name = os.path.basename(local_file)
+    s3_file_name = local_file
     # prepare s3 path according to the spec
     # it needs to be like e.g. "rec/id/*.json"
     s3_file_path = '{}/{}/{}'.format(task, PARTICIPANT_ID, s3_file_name)

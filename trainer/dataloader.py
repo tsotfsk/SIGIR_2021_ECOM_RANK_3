@@ -16,8 +16,8 @@ class SeqLoader(object):
         self.batch_size = batch_size
         self.pr = 0
 
-        self.n_items = 32784
-        self.all_items = set(range(self.n_items))
+        # self.n_items = 32784
+        # self.all_items = set(range(self.n_items))
         # data
         self.data_list = []
         self._load_data()
@@ -65,7 +65,10 @@ class SeqLoader(object):
 
     def to(self, batch_data):
         for key, value in batch_data.items():
-            batch_data[key] = torch.LongTensor(value).to(self.device)
+            if key in ['seqs', 'target_ids']:
+                batch_data[key] = torch.LongTensor(value).to(self.device) + 1  # XXX add padding
+            else:
+                batch_data[key] = torch.LongTensor(value).to(self.device)
         return batch_data
 
     def _list2dict(self, batch_data):
