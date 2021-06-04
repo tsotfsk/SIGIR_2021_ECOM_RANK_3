@@ -15,12 +15,16 @@ Reference:
 
 """
 
-import torch
-from torch import nn
-
-from models.layers import TransformerEncoder
-from models.layers import BPRLoss
 import pickle
+
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch import nn
+from torch.nn.init import xavier_normal_, xavier_uniform_
+
+from models.layers import BPRLoss, DynamicGRU, TransformerEncoder
 
 
 class SASRec(nn.Module):
@@ -40,8 +44,8 @@ class SASRec(nn.Module):
         self.config = config
         self.n_layers = 2
         self.n_heads = 1
-        self.hidden_size = 100  # same as embedding_size
-        self.inner_size = 256  # the dimensionality in feed-forward layer
+        self.hidden_size = 128  # same as embedding_size
+        self.inner_size = 128  # the dimensionality in feed-forward layer
         self.hidden_dropout_prob = 0.5
         self.attn_dropout_prob = 0.5
         self.hidden_act = 'gelu'
@@ -53,24 +57,20 @@ class SASRec(nn.Module):
 
         # define layers and loss
         self.item_embedding = nn.Embedding(
-            self.n_items + 1, self.embedding_size, padding_idx=0)
+            self.n_items + 1, self.hidden_size, padding_idx=0)
 
-        with open('./dataset/prepared/text.pkl', 'rb') as f:
-            text = pickle.load(f)
-        with open('./dataset/prepared/imag.pkl', 'rb') as f:
-            imag = pickle.load(f)
+        with open('./dataset/prepared/dw_sku.pkl', 'rb') as f:
+            dw_item = pickle.load(f)
 
-        text = torch.from_numpy(text)
-        text = F.normalize(text, dim=1)
+        dw_item = torch.from_numpy(dw_item)
+        dw_item = F.normalize(dw_item, dim=1)
 
-        imag = torch.from_numpy(imag)
-        imag = F.normalize(imag, dim=1)
-
-        pretrain = torch.cat((text, imag), dim=1)
+        # pretrain = torch.cat((text, imag), dim=1)
         with torch.no_grad():
-            self.item_embedding.weight[1:].copy_(pretrain)
+            self.item_embedding.weight[1:].copy_(dw_item)
+
         self.position_embedding = nn.Embedding(
-            5, self.hidden_size)
+            3, self.hidden_size)
         self.trm_encoder = TransformerEncoder(
             n_layers=self.n_layers,
             n_heads=self.n_heads,
