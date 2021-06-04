@@ -54,8 +54,8 @@ def test_remap(uids, iids):
     missing = 0
     for t in tqdm.tqdm(test_queries, total=len(test_queries)):
         # this is our prediction, which defaults to a random SKU
-        next_sku = np.random.choice(len(all_items))
-        next_sku = [info.idx2item[next_sku]]
+        next_sku = np.random.choice(len(all_items), 20)
+        next_sku = [info.idx2item[iid] for iid in next_sku]
         # copy the test case
         _pred = dict(t)
 
