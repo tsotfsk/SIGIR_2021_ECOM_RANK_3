@@ -18,11 +18,13 @@ def test(args, test_dataloader, k=20):
     model.to(device)
     model.load_state_dict(torch.load(
         f'./saved/{args.model}.pth')['state_dict'])
+    test_items = np.load('./dataset/prepared/test_items.npy')
+    test_items = torch.from_numpy(test_items + 1).long().to(device)
     with tqdm(test_dataloader, total=test_dataloader.batch_num, leave=False) as t:
         for _, batch_data in enumerate(t):
             logits = model.predict(batch_data)
             logits.scatter_(1, batch_data['seqs'], -np.inf)
-            # logits[:, 0].fill_(-np.inf)
+            logits[:, test_items] += 100
             result.append(torch.topk(logits[:, 1:], k=k, dim=-1)[1].cpu().numpy())
             uids.append(batch_data['user_ids'].cpu().numpy())
         iids = np.concatenate(result)
@@ -113,7 +115,7 @@ if __name__ == "__main__":
         phase='valid', device=device, batch_size=2 * args.batch_size)
 
     evaluator = FullEvaluator(
-        metrics=["MRR"], topk=10, pos_len=1)
+        metrics=["MRR"], topk=20, pos_len=1)
     if args.evaluate:
         test_dataloader = SeqLoader(
             phase='test', device=device, batch_size=2 * args.batch_size)
