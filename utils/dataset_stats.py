@@ -11,9 +11,9 @@ from datetime import datetime
 
 
 # put here the file paths if you did not unzip in same folder
-BROWSING_FILE_PATH = 'browsing_train.csv'
-SEARCH_TRAIN_PATH = 'search_train.csv'
-SKU_2_CONTENT_PATH = 'sku_to_content.csv'
+BROWSING_FILE_PATH = './dataset/raw/browsing_train.csv'
+SEARCH_TRAIN_PATH = './dataset/raw/search_train.csv'
+SKU_2_CONTENT_PATH = './dataset/raw/sku_to_content.csv'
 
 
 def get_rows(file_path: str, print_limit: int = 2):

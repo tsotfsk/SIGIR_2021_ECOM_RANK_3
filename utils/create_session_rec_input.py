@@ -13,10 +13,10 @@ import pandas as pd
 # Please change the default 1% ratio below to suit your needs.
 TRAIN_RATIO = 0.01
 
-TRAIN_PATH = Path('.session_rec_sigir_data/train/browsing_train.csv')
-TEST_PATH = Path('./session_rec_sigir_data/test/rec_test_sample.json')
+TRAIN_PATH = Path('./dataset/raw/browsing_train.csv')
+TEST_PATH = Path('./dataset/raw/rec_test_phase_1.json')
 
-PREPARED_FOLDER = Path('./session_rec_sigir_data/prepared')
+PREPARED_FOLDER = Path('./dataset/prepared')
 PREPARED_FOLDER.mkdir(parents=True, exist_ok=True)
 
 PREPARED_TRAIN_PATH = PREPARED_FOLDER / 'sigir_train_full.txt'

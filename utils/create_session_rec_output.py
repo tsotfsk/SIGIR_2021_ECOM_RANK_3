@@ -5,17 +5,38 @@ generates a copy of the recommendation test data, appended with a new column con
 for each test sample.
 """
 import csv
+import os
 import json
 from pathlib import Path
+from dotenv import load_dotenv
+import time
+from datetime import datetime
 import pickle
+from utils.uploader import upload_submission
+import argparse
 
-TEST_PATH = Path('./session_rec_sigir_data/test/rec_test.json')
+parser = argparse.ArgumentParser()
+parser.add_argument('--upload', action='store_true')
+
+args, _ = parser.parse_known_args()
+
+# load envs from env file
+load_dotenv(verbose=True, dotenv_path='./utils/upload.env.local')
+
+
+# read envs from file
+EMAIL = os.getenv('EMAIL', None)  # the e-mail you used to sign up
+assert EMAIL is not None
+
+
+TEST_PATH = Path('./dataset/raw/rec_test_phase_1.json')
 TEST_WITH_PREDICTION_PATH = Path(
-    './session_rec_sigir_data/test/rec_test_with_pred.json')
+    './submission/' + '{}_{}.json'.format(
+        EMAIL.replace('@', '_'), round(time.time() * 1000)))
 RECOMMENDATION_PATH = Path(
-    './session_rec_sigir_data/prepared/test_single_models_sigir.stamp-init_lr=0.003-n_epochs=10-decay_rate=0.4.csv.Saver@20--.csv')
+    './results/gru4rec.csv')
 ITEM_LABEL_ENCODING_MAP_PATH = Path(
-    './session_rec_sigir_data/prepared/item_label_encoding.p')
+    './dataset/prepared/item_label_encoding.p')
 
 item_label_encoding = pickle.load(ITEM_LABEL_ENCODING_MAP_PATH.open(mode='rb'))
 
@@ -35,6 +56,11 @@ with RECOMMENDATION_PATH.open() as csvfile:
 
 # store the final output file
 with TEST_WITH_PREDICTION_PATH.open('w') as outfile:
-    json.dump(original_test_data, outfile)
+    json.dump(original_test_data, outfile, indent=2)
 
 print("All done appending prediction to original recommendation test data!")
+
+if args.upload:
+    upload_submission(local_file=TEST_WITH_PREDICTION_PATH, task='rec')
+# bye bye
+print("\nAll done at {}: see you, space cowboy!".format(datetime.utcnow()))
