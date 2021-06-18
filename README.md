@@ -1,10 +1,10 @@
-**# Solution of SIGIR Ecom Data Challenge 2021**
+# Solution of SIGIR Ecom Data Challenge 2021
 
-**## Overview**
+## Overview
 
 Coveo hosts the 2021 [SIGIR eCom](https://sigir-ecom.github.io/data-task.html) Data Challenge
 
-**## Requirements**
+## Requirements
 
 - torch==1.8.1
 - tqdm==4.60.0
@@ -14,7 +14,7 @@ Coveo hosts the 2021 [SIGIR eCom](https://sigir-ecom.github.io/data-task.html) D
 
 - python-dotenv==0.13.0
 
-**## Getting Started**
+## Getting Started
 
 ```shell
 mkdir saved log results
@@ -24,11 +24,11 @@ mkdir new prepared raw
 
 The path of raw dataset is `./dataset/raw`
 
-**### Pre-Process**
+### Pre-Process
 
 Run the scripts in `./scripts`
 
-**### Models**
+### Models
 
 #### txt embedding
 
@@ -58,6 +58,6 @@ Run the scripts in `./scripts`
  python train.py --model GRU4Rec --device 0 --lr 1e-4 --seq_mode sku --commit rand --evaluate
 ```
 
-**### Post-Process**
+### Post-Process
 
 Run `ensemble.ipynb`
