@@ -13,11 +13,13 @@ class GRU4Rec(nn.Module):
 
         # load parameters info
         self.config = config
-        self.embedding_size = 128
-        self.hidden_size = 128
-        self.num_layers = 1
-        self.dropout = 0.2
+        self.embedding_size = config.embedding_size
+        self.hidden_size = config.hidden_size
+        self.num_layers = config.num_layers
+        self.dropout = config.dropout
         self.n_items = n_items
+        self.normalize = config.normalize
+        self.commit = config.commit
 
         # define layers and loss
         self.item_embedding = nn.Embedding(
@@ -38,12 +40,20 @@ class GRU4Rec(nn.Module):
         # with torch.no_grad():
         #     self.item_embedding.weight[1:].copy_(pretrain)
 
-        with open('./dataset/prepared/dw_sku_i-i.pkl', 'rb') as f:
-            dw_item = pickle.load(f)
-        dw_item = torch.from_numpy(dw_item)
-        # dw_item = F.normalize(dw_item, dim=1)
+        with open('./dataset/prepared/text.pkl', 'rb') as f:
+            text = pickle.load(f)
+        text = torch.from_numpy(text)
+        text = F.normalize(text, dim=1)
         with torch.no_grad():
-            self.item_embedding.weight[1:].copy_(dw_item)
+            self.item_embedding.weight[1:].copy_(text)
+
+        # with open('./dataset/prepared/dw_sku_i-i.pkl', 'rb') as f:
+        #     dw_item = pickle.load(f)
+        # dw_item = torch.from_numpy(dw_item)
+        # dw_item = F.normalize(dw_item, dim=1)
+        # with torch.no_grad():
+        #     self.item_embedding.weight[1:].copy_(dw_item)
+
         # self.emb_dropout = nn.Dropout(self.dropout_prob)
         self.gru_layers = DynamicGRU(
             input_size=self.embedding_size,
@@ -79,6 +89,14 @@ class GRU4Rec(nn.Module):
             xavier_normal_(module.weight.data, gain=nn.init.calculate_gain('relu'))
             if module.bias is not None:
                 module.bias.data.fill_(0.0)
+
+    def load_embedding(self):
+        with open('./dataset/prepared/dw_sku_i-i.pkl', 'rb') as f:
+            item_embed = pickle.load(f)
+        item_embed = torch.from_numpy(item_embed)
+        dw_iitem_embedtem = F.normalize(dw_item, dim=1)
+        with torch.no_grad():
+            self.item_embedding.weight[1:].copy_(dw_iitem_embedtem)
 
     def forward(self, item_seq, item_seq_len):
         item_seq_emb = self.item_embedding(item_seq)
@@ -120,7 +138,7 @@ class GRU4Rec(nn.Module):
             'config': self.config,
             'state_dict': self.state_dict(),
         }
-        torch.save(state, './saved/GRU4Rec.pth')
+        torch.save(state, f'./saved/GRU4Rec_{self.commit}.pth')
 
     def freeze(self):
         for param in self.parameters():

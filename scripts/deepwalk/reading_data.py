@@ -77,17 +77,24 @@ def ReadTxtNet(file_path="", undirected=True):
                 dst.append(n2)
                 weight.append(w)
 
+            # if undirected:
+            #     if n2 not in net:
+            #         net[n2] = {n1: w}
+            #         src.append(n2)
+            #         dst.append(n1)
+            #         weight.append(w)
+            #     elif n1 not in net[n2]:
+            #         net[n2][n1] = w
+            #         src.append(n2)
+            #         dst.append(n1)
+            #         weight.append(w)
+
             if undirected:
                 if n2 not in net:
-                    net[n2] = {n1: w}
+                    net[n2] = {n2: 1}
                     src.append(n2)
-                    dst.append(n1)
-                    weight.append(w)
-                elif n1 not in net[n2]:
-                    net[n2][n1] = w
-                    src.append(n2)
-                    dst.append(n1)
-                    weight.append(w)
+                    dst.append(n2)
+                    weight.append(1)
 
     print("node num: %d" % len(net))
     print("edge num: %d" % len(src))
