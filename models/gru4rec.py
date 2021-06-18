@@ -1,10 +1,11 @@
+import pickle
+
 import torch
 import torch.nn as nn
-from torch.nn.init import xavier_uniform_, xavier_normal_
-from models.layers import DynamicGRU, BPRLoss
 import torch.nn.functional as F
-import pickle
-import numpy as np
+from torch.nn.init import xavier_normal_, xavier_uniform_
+
+from models.layers import DynamicGRU
 
 
 class GRU4Rec(nn.Module):
@@ -16,7 +17,6 @@ class GRU4Rec(nn.Module):
         self.embedding_size = config.embedding_size
         self.hidden_size = config.hidden_size
         self.num_layers = config.num_layers
-        self.dropout = config.dropout
         self.n_items = n_items
         self.normalize = config.normalize
         self.commit = config.commit
@@ -25,36 +25,12 @@ class GRU4Rec(nn.Module):
         self.item_embedding = nn.Embedding(
             self.n_items + 1, self.embedding_size, padding_idx=0)
 
-        # with open('./dataset/prepared/text.pkl', 'rb') as f:
-        #     text = pickle.load(f)
-        # with open('./dataset/prepared/imag.pkl', 'rb') as f:
-        #     imag = pickle.load(f)
+        if self.commit != 'rand':
+            item_embed = self.load_embedding()
+            dw_iitem_embedtem = F.normalize(item_embed, dim=1)
+            with torch.no_grad():
+                self.item_embedding.weight[1:].copy_(dw_iitem_embedtem)
 
-        # text = torch.from_numpy(text)
-        # text = F.normalize(text, dim=1)
-
-        # imag = torch.from_numpy(imag)
-        # imag = F.normalize(imag, dim=1)
-
-        # pretrain = torch.cat((text, imag), dim=1)
-        # with torch.no_grad():
-        #     self.item_embedding.weight[1:].copy_(pretrain)
-
-        with open('./dataset/prepared/text.pkl', 'rb') as f:
-            text = pickle.load(f)
-        text = torch.from_numpy(text)
-        text = F.normalize(text, dim=1)
-        with torch.no_grad():
-            self.item_embedding.weight[1:].copy_(text)
-
-        # with open('./dataset/prepared/dw_sku_i-i.pkl', 'rb') as f:
-        #     dw_item = pickle.load(f)
-        # dw_item = torch.from_numpy(dw_item)
-        # dw_item = F.normalize(dw_item, dim=1)
-        # with torch.no_grad():
-        #     self.item_embedding.weight[1:].copy_(dw_item)
-
-        # self.emb_dropout = nn.Dropout(self.dropout_prob)
         self.gru_layers = DynamicGRU(
             input_size=self.embedding_size,
             hidden_size=self.hidden_size,
@@ -63,18 +39,7 @@ class GRU4Rec(nn.Module):
             batch_first=True,
         )
         self.dense = nn.Linear(self.hidden_size, self.embedding_size)
-        # self.dense = nn.Sequential(
-        #     nn.Linear(self.hidden_size, self.hidden_size),
-        #     nn.BatchNorm1d(self.hidden_size),
-        #     nn.ReLU(inplace=True),
-        #     nn.Dropout(p=self.dropout),
-        #     nn.Linear(self.hidden_size, self.embedding_size),
-        # )
-        self.loss_type = "ce"
-        if self.loss_type == "bpr":
-            self.loss_fct = BPRLoss()
-        else:
-            self.loss_fct = nn.CrossEntropyLoss()
+        self.loss_fct = nn.CrossEntropyLoss()
 
         # parameters initialization
         self.apply(self._init_weights)
@@ -90,18 +55,22 @@ class GRU4Rec(nn.Module):
             if module.bias is not None:
                 module.bias.data.fill_(0.0)
 
+    @property
+    def commit2embed(self):
+        return {
+            'txt': './dataset/prepared/text.pkl',
+            'dw': './dataset/prepared/dw_sku.pkl',
+            'dw_i-i': './dataset/prepared/dw_sku_i-i.pkl'
+        }
+
     def load_embedding(self):
-        with open('./dataset/prepared/dw_sku_i-i.pkl', 'rb') as f:
+        with open(self.commit2embed[self.commit], 'rb') as f:
             item_embed = pickle.load(f)
-        item_embed = torch.from_numpy(item_embed)
-        dw_iitem_embedtem = F.normalize(dw_item, dim=1)
-        with torch.no_grad():
-            self.item_embedding.weight[1:].copy_(dw_iitem_embedtem)
+        return torch.from_numpy(item_embed)
 
     def forward(self, item_seq, item_seq_len):
         item_seq_emb = self.item_embedding(item_seq)
-        # item_seq_emb_dropout = self.emb_dropout(item_seq_emb)
-        output, ht = self.gru_layers(item_seq_emb, item_seq_len)
+        _, ht = self.gru_layers(item_seq_emb, item_seq_len)
         result = self.dense(ht.squeeze(0))
         return result
 
@@ -111,17 +80,9 @@ class GRU4Rec(nn.Module):
         seq_output = self.forward(item_seq, item_seq_len)
         pos_items = feed_dict['target_ids']
 
-        if self.loss_type == "bpr":
-            neg_items = feed_dict['neg_ids']
-            pos_items_emb = self.item_embedding(pos_items)
-            neg_items_emb = self.item_embedding(neg_items)
-            pos_score = torch.sum(seq_output * pos_items_emb, dim=-1)  # [B]
-            neg_score = torch.sum(seq_output * neg_items_emb, dim=-1)  # [B]
-            loss = self.loss_fct(pos_score, neg_score)
-        else:
-            test_item_emb = self.item_embedding.weight
-            logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
-            loss = self.loss_fct(logits, pos_items)
+        test_item_emb = self.item_embedding.weight
+        logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1))
+        loss = self.loss_fct(logits, pos_items)
         return loss
 
     def predict(self, feed_dict):
