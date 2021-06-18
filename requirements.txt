@@ -1,3 +1,5 @@
+torch==1.8.1
+tqdm==4.60.0
+numpy==1.20.2
 boto3==1.15.8
 python-dotenv==0.13.0
-gensim==4.0.1
