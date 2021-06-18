@@ -14,12 +14,13 @@ import tqdm
 from utils.logger import Logger
 from dotenv import load_dotenv
 from utils.uploader import upload_submission
+from torch.nn.utils.rnn import pad_sequence
 
 # load envs from env file
-load_dotenv(verbose=True, dotenv_path='./utils/upload.env.local')
+# load_dotenv(verbose=True, dotenv_path='./utils/upload.env.local')
 
-EMAIL = os.getenv('EMAIL', None)  # the e-mail you used to sign up
-assert EMAIL is not None
+# EMAIL = os.getenv('EMAIL', None)  # the e-mail you used to sign up
+# assert EMAIL is not None
 
 
 class EasyDict():
@@ -29,7 +30,7 @@ class EasyDict():
 
 
 def test_remap(uids, iids):
-    with open('./dataset/raw/rec_test_phase_1.json') as json_file:
+    with open('./dataset/raw/rec_test_phase_2.json') as json_file:
         # read the test cases from the provided file
         test_queries = json.load(json_file)
 
@@ -76,18 +77,18 @@ def test_remap(uids, iids):
 
     print('缺失比例:{}'.format(missing / len(test_queries)))
     # name the prediction file according to the README specs
-    local_prediction_file = '{}_{}.json'.format(
-        EMAIL.replace('@', '_'), round(time.time() * 1000))
+    # local_prediction_file = '{}_{}.json'.format(
+    #     EMAIL.replace('@', '_'), round(time.time() * 1000))
 
-    # dump to file
-    with open(local_prediction_file, 'w') as outfile:
-        json.dump(my_predictions, outfile, indent=2)
+    # # dump to file
+    # with open(local_prediction_file, 'w') as outfile:
+    #     json.dump(my_predictions, outfile, indent=2)
 
-    # finally, upload the test file using the provided script
-    upload_submission(local_file=local_prediction_file, task='rec')
-    # bye bye
-    print("\nAll done at {}: see you, space cowboy!".format(
-        datetime.datetime.utcnow()))
+    # # finally, upload the test file using the provided script
+    # upload_submission(local_file=local_prediction_file, task='rec')
+    # # bye bye
+    # print("\nAll done at {}: see you, space cowboy!".format(
+    #     datetime.datetime.utcnow()))
 
 
 def load_data(path):
